@@ -1,0 +1,40 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = "wordpress_custom"
+        CONTAINER_NAME = "wordpress_container"
+    }
+
+    stages {
+        stage('Cloner le dépôt') {
+            steps {
+                git 'https://github.com/nicholasevrard/wordpress_dockerfile.git'
+            }
+        }
+
+        stage('Construire l’image Docker') {
+            steps {
+                script {
+                    sh "docker build -t ${IMAGE_NAME} ."
+                }
+            }
+        }
+
+        stage('Démarrer le conteneur Docker') {
+            steps {
+                script {
+                    sh "docker stop ${CONTAINER_NAME} || true"
+                    sh "docker rm ${CONTAINER_NAME} || true"
+                    sh "docker run -d --name ${CONTAINER_NAME} -p 8080:80 ${IMAGE_NAME}"
+                }
+            }
+        }
+
+        stage('Nettoyage') {
+            steps {
+                sh "docker system prune -f"
+            }
+        }
+    }
+}
